@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tableau de bord administratif AI4CKD">
+    <title>Dashboard Admin AI4CKD</title>
+    <link rel="stylesheet" href="dashboard-admin.css">
+    <!-- Chargement des librairies -->
+    <script src="https://unpkg.com/pdf-lib@^1.16.0/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin-dashboard.js" defer></script>
+</head>
+<body>
+    <div class="sidebar" role="navigation">
+        <h1>AI4CKD</h1>
+        <ul>
+            <li><a href="#" aria-current="page">📊 Tableau de bord</a></li>
+            <li><a href="./patient/patient.html">👥 Patients</a></li>
+            <li><a href="./medecins/medecins.html">👨⚕️ Médecins</a></li>
+            <li><a href="./Rendez-vous/rendezvous.html">🗓 Rendez-vous</a></li>
+            <li><a href="./parametres/parametres.html">⚙️ Paramètres</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button id="logoutBtn" aria-label="Déconnexion">🚪 Déconnexion</button>
+        </div>
+    </div>
+    
+    <div class="main-content" role="main">
+        <header>
+            <div class="search-container">
+                <h2>Dashboard Admin</h2>
+            </div>
+            <div class="profile" aria-label="Profil administrateur">
+                <span aria-hidden="true">👔</span>
+                <span>Admin</span>
+            </div>
+        </header>
+        
+        <!-- Section Statistiques -->
+        <section class="stats">
+            <h2 class="sr-only">Statistiques</h2>
+            <div class="stat-card">
+                <h3>Patients Actifs</h3>
+                <p id="totalPatients">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Médecins</h3>
+                <p id="totalDoctors">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Cas Critiques</h3>
+                <p id="criticalCases">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Prochains RDV</h3>
+                <p id="upcomingAppointments">0</p>
+            </div>
+        </section>
+        
+        <!-- Section Graphiques -->
+        <section class="analytics-section">
+            <h2><i class="fas fa-chart-line"></i> Statistiques</h2>
+            
+            <div class="chart-grid">
+                <!-- Graphique 1 : Répartition patients -->
+                <div class="chart-card">
+                    <h3>Répartition par stade MRC</h3>
+                    <canvas id="ckdStagesChart"></canvas>
+                </div>
+                
+                <!-- Graphique 2 : Médecins par spécialité -->
+                <div class="chart-card">
+                    <h3>Médecins par spécialité</h3>
+                    <canvas id="doctorsSpecialtyChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section Liste des Patients -->
+        <section class="quick-access">
+            <div class="section-header">
+                <h2>Accès Rapide</h2>
+            </div>
+            
+            <div class="quick-access-grid">
+                <a href="./patient/patient.html" class="quick-card">
+                    <i class="fas fa-user-injured"></i>
+                    <span>Gérer les patients</span>
+                </a>
+                
+                <a href="./medecins/medecins.html" class="quick-card">
+                    <i class="fas fa-user-md"></i>
+                    <span>Gérer les médecins</span>
+                </a>
+                
+                <a href="./Rendez-vous/rendezvous.html" class="quick-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Voir les rendez-vous</span>
+                </a>
+                
+                <a href="./rapports/rapports.html" class="quick-card">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Générer des rapports</span>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Chargement de Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Charger les données
+            const patients = JSON.parse(localStorage.getItem('patients')) || [];
+            const doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+            const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+            
+            // Mettre à jour les stats
+            updateStats(patients, doctors, appointments);
+            
+            // Afficher les graphiques
+            renderCharts(patients, doctors);
+        });
+
+        function updateStats(patients, doctors, appointments) {
+            document.getElementById('totalPatients').textContent = patients.length;
+            document.getElementById('totalDoctors').textContent = doctors.length;
+            document.getElementById('criticalCases').textContent = patients.filter(p => p.stadeMRC >= 4).length;
+            
+            const now = new Date();
+            document.getElementById('upcomingAppointments').textContent = 
+                appointments.filter(a => new Date(a.date) > now).length;
+        }
+
+        function renderCharts(patients, doctors) {
+            // Graphique patients
+            const stagesCount = [0, 0, 0, 0, 0];
+            patients.forEach(p => {
+                if (p.stadeMRC >= 1 && p.stadeMRC <= 5) stagesCount[p.stadeMRC - 1]++;
+            });
+            
+            new Chart(document.getElementById('ckdStagesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Stade 1', 'Stade 2', 'Stade 3', 'Stade 4', 'Stade 5'],
+                    datasets: [{
+                        data: stagesCount,
+                        backgroundColor: ['#4bc0c0', '#36a2eb', '#ffcd56', '#ff6384', '#9966ff']
+                    }]
+                }
+            });
+            
+            // Graphique médecins
+            const specialties = {};
+            doctors.forEach(d => {
+                specialties[d.specialty] = (specialties[d.specialty] || 0) + 1;
+            });
+            
+            new Chart(document.getElementById('doctorsSpecialtyChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(specialties),
+                    datasets: [{
+                        label: 'Nombre de médecins',
+                        data: Object.values(specialties),
+                        backgroundColor: '#36a2eb'
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

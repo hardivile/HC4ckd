@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Médecins - Hôpital AI4CKD</title>
+    <link rel="stylesheet" href="medecins.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>AI4CKD</h1>
+            <ul>
+                <li><a href="../dashboard-admin.html"><i class="fas fa-chart-line"></i> Tableau de bord</a></li>
+                <li><a href="medecins.html" class="active"><i class="fas fa-user-md"></i> Médecins</a></li>
+                <li><a href="../patient/patient.html"><i class="fas fa-user-injured"></i> Patients</a></li>
+                <li><a href="../Rendez-vous/rendezvous.html"><i class="fas fa-calendar-alt"></i> Rendez-vous</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header>
+                <h2><i class="fas fa-user-md"></i> Médecins de l'Hôpital AI4CKD</h2>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Rechercher un médecin...">
+                    <button id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </header>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Médecins enregistrés</h3>
+                    <p id="totalDoctors">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Spécialités</h3>
+                    <p id="totalSpecialties">0</p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="doctorsTable">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Nom</th>
+                            <th>Spécialité</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                        <!-- Les données seront injectées via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="doctorModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalContent">
+                <!-- Contenu dynamique -->
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/medecins.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<div class="workflow-editor">
+    <h3>Nouveau Workflow</h3>
+    <select id="workflowTarget">
+        <option value="stade3">Patients Stade 3</option>
+        <option value="stade4">Patients Stade 4</option>
+    </select>
+    
+    <div class="action-list">
+        <div class="action">
+            <select class="action-type">
+                <option value="EXAM_REMINDER">Rappel d'examen</option>
+                <option value="CONSULTATION">Consultation spécialiste</option>
+            </select>
+            <input type="text" class="action-details" placeholder="Détails...">
+        </div>
+    </div>
+    <button id="addAction">+ Ajouter Action</button>
+    <button id="saveWorkflow">Enregistrer</button>
+</div>
