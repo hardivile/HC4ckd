@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Patients - AI4CKD</title>
+    <link rel="stylesheet" href="patient.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@^1.16.0/dist/pdf-lib.min.js"></script>
+    <script src="../auto-tasks.js" defer></script>
+    <script  src="patient.js" defer></script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>AI4CKD</h2>
+        <ul>
+            <li><a href="../dashboard.html">📊 Tableau de bord</a></li>
+            <li><a href="patient.html" class="active">👥 Patients</a></li>
+            <li><a href="../Rendez-vous/rendezvous.html">Rendez-vous</a></li>
+            <li><a href="#">⚙️ Paramètres</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <header>
+            <div class="search-container">
+                <input type="text" id="search" placeholder="🔍 Rechercher un patient..." aria-label="Rechercher un patient">
+            </div>
+            <div class="profile">👨⚕️ Dr. Dupont</div>
+        </header>
+        
+        <section class="patient-management">
+            <div class="section-header">
+                <h2>Gestion des Patients</h2>
+                <button id="generateAllPdf" class="pdf-btn">📄 Exporter tous les PDF</button>
+            </div>
+            
+            <div class="form-container">
+                <h3>Ajouter un nouveau patient</h3>
+                <form id="patientForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="lastName">Nom:</label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="firstName">Prénom:</label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="age">Âge:</label>
+                            <input type="number" id="age" required min="0" max="120">
+                        </div>
+                            
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" required>
+                        </div>
+
+                        
+
+
+                        <div class="form-group">
+                            <label for="lastExam">Dernier examen:</label>
+                            <input type="date" id="lastExam" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Enregistrer</button>
+                        <button type="reset" class="cancel-btn">Annuler</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="patient-list">
+                <h3>Liste des Patients</h3>
+                <div class="table-responsive">
+                    <table aria-label="Liste des patients">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Âge</th>
+                                <th>Stade MRC</th>
+                                <th>Dernier Examen</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientList">
+                            <!-- Les patients seront ajoutés ici dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Modifier la fonction loadPatients pour inclure le bouton "Voir"
+        function loadPatients() {
+            const patients = JSON.parse(localStorage.getItem('patients')) || [];
+            patientList.innerHTML = '';
+            
+            patients.forEach((patient, index) => {
+                const row = document.createElement('tr');
+                
+                if (patient.stadeMRC >= 4) {
+                    row.classList.add('critical');
+                }
+                
+                row.innerHTML = `
+                    <td>${patient.nom || 'N/A'}</td>
+                    <td>${patient.prenom || 'N/A'}</td>
+                    <td>${patient.age || 'N/A'}</td>
+                    <td>Stade ${patient.stadeMRC || 'N/A'}</td>
+                    <td>${patient.dernierExamen || 'N/A'}</td>
+                    <td class="action-btns">
+                        <a href="patient-details.html?id=${patient.id}" class="view-btn" title="Voir">
+                            👁️
+                        </a>
+                        <a href="patient.html?edit=${index}" class="edit-btn" title="Modifier">✏️</a>
+                        <button class="delete-btn" data-id="${index}" title="Supprimer">🗑️</button>
+                        <button class="pdf-btn" data-id="${index}" title="Générer PDF">📄</button>
+                    </td>
+                `;
+                
+                patientList.appendChild(row);
+            });
+            
+            // Conserver les autres écouteurs d'événements existants
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deletePatient(parseInt(this.getAttribute('data-id')));
+                });
+            });
+            
+            document.querySelectorAll('.pdf-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const patientId = this.getAttribute('data-id');
+                    generatePdfForPatient(patientId);
+                });
+            });
+        }
+
+        window.addEventListener('message', function(event) {
+        if (event.data.type === 'patientUpdated') {
+            loadPatients(); // Recharge la liste des patients
+        }
+    });
+    </script>
+    
+</body>
+</html>

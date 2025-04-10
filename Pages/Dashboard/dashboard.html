@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tableau de bord médical AI4CKD pour le suivi des patients atteints de maladie rénale chronique">
+    <title>Dashboard Médecin AI4CKD</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <!-- Chargement des librairies -->
+    <script src="https://unpkg.com/pdf-lib@^1.16.0/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="auto-tasks.js" defer></script>
+    <script src="dashboard.js" defer></script>
+</head>
+<body>
+    <div class="sidebar" role="navigation">
+        <h1>AI4CKD</h1>
+        <ul>
+            <li><a href="#" aria-current="page">📊 Tableau de bord</a></li>
+            <li><a href="./patient/patient.html">👥 Patients</a></li>
+            <li><a href="./Rendez-vous/rendezvous.html">🗓 Rendez-vous</a></li>
+            <li><a href="./parametres/parametres.html">⚙️ Paramètres</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button id="logoutBtn" aria-label="Déconnexion">🚪 Déconnexion</button>
+        </div>
+    </div>
+    
+    <div class="main-content" role="main">
+        <header>
+            <div class="search-container">
+                <label for="search" class="sr-only">Rechercher un patient</label>
+                <input type="text" id="patientSearch" placeholder=" Rechercher un patient..." aria-label="Rechercher un patient">
+            </div>
+            <div class="profile" aria-label="Profil du docteur">
+                <span aria-hidden="true">👨⚕️</span>
+                <span>Dr. Dupont</span>
+            </div>
+        </header>
+        
+        <!-- Section Statistiques -->
+        <section class="stats">
+            <h2 class="sr-only">Statistiques</h2>
+            <div class="stat-card">
+                <h3>Patients Actifs</h3>
+                <p id="totalPatients" aria-live="polite">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Cas Critiques</h3>
+                <p id="criticalCases" aria-live="polite">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Prochains RDV</h3>
+                <p id="upcomingAppointments">0</p>
+            </div>
+        </section>
+        
+        <!-- Section Graphiques -->
+        <section class="analytics-section">
+            <h2><i class="fas fa-chart-line"></i> Statistiques Patients</h2>
+            
+            <div class="chart-grid">
+                <!-- Graphique 1 : Répartition par stade MRC -->
+                <div class="chart-card">
+                    <h3>Répartition par stade MRC</h3>
+                    <canvas id="ckdStagesChart" aria-label="Graphique circulaire montrant la répartition des patients par stade de maladie rénale"></canvas>
+                </div>
+                
+                <!-- Graphique 2 : Évolution mensuelle -->
+                <div class="chart-card">
+                    <h3>Nouveaux patients (30 jours)</h3>
+                    <canvas id="monthlyPatientsChart" aria-label="Graphique linéaire montrant l'évolution des nouveaux patients sur les 30 derniers jours"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section Liste des Patients -->
+        <section class="patients">
+            <div class="section-header">
+                <h2>Liste des Patients</h2>
+                <div class="action-buttons">
+                    <a href="./patient/patient.html" class="add-patient-btn">+ Ajouter un patient</a>
+                    <button id="generatePdfBtn" class="pdf-btn">📄 Générer PDF</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table aria-label="Liste des patients">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nom</th>
+                            <th scope="col">Âge</th>
+                            <th scope="col">Stade MRC</th>
+                            <th scope="col">Dernier Examen</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientList">
+                        <!-- Les patients seront ajoutés ici dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+            <nav class="pagination" aria-label="Pagination">
+                <a href="./patient/patient.html">Voir tous les patients</a>
+            </nav>
+        </section>
+    </div>
+
+    <!-- Chargement de Font Awesome pour les icônes -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <script>
+        // Fonctions pour les graphiques
+        function renderCharts(patientsData) {
+            // 1. Graphique de répartition par stade MRC
+            const ckdStagesCtx = document.getElementById('ckdStagesChart').getContext('2d');
+            
+            // Compter les patients par stade
+            const stagesCount = [0, 0, 0, 0, 0];
+            patientsData.forEach(patient => {
+                if (patient.stadeMRC >= 1 && patient.stadeMRC <= 5) {
+                    stagesCount[patient.stadeMRC - 1]++;
+                }
+            });
+            
+            new Chart(ckdStagesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Stade 1', 'Stade 2', 'Stade 3', 'Stade 4', 'Stade 5'],
+                    datasets: [{
+                        data: stagesCount,
+                        backgroundColor: [
+                            '#4bc0c0',
+                            '#36a2eb',
+                            '#ffcd56',
+                            '#ff6384',
+                            '#9966ff'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} patients (${((context.raw/patientsData.length)*100).toFixed(1)}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 2. Graphique d'évolution mensuelle
+            const monthlyCtx = document.getElementById('monthlyPatientsChart').getContext('2d');
+            
+            // Générer des données pour les 30 derniers jours
+            const last30Days = [...Array(30).keys()].map(i => {
+                const date = new Date();
+                date.setDate(date.getDate() - (29 - i));
+                return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+            });
+            
+            // Simuler des données (à remplacer par vos données réelles)
+            const dailyCounts = last30Days.map(() => Math.floor(Math.random() * 5));
+            
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: last30Days,
+                    datasets: [{
+                        label: 'Nouveaux patients',
+                        data: dailyCounts,
+                        fill: true,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: '#4bc0c0',
+                        tension: 0.4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#4bc0c0'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    return `${context.parsed.y} nouveau(x) patient(s)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gestion PDF
+        document.addEventListener('DOMContentLoaded', function() {
+            const pdfBtn = document.getElementById('generatePdfBtn');
+            
+            pdfBtn.addEventListener('click', function() {
+                const patients = JSON.parse(localStorage.getItem('patients')) || [];
+                if (patients.length > 0) {
+                    const firstPatient = patients[0];
+                    if (window.generatePatientReport) {
+                        window.generatePatientReport(firstPatient);
+                    } else {
+                        alert("Fonction de génération de PDF non disponible");
+                    }
+                } else {
+                    alert("Aucun patient disponible");
+                }
+            });
+
+            // Charger les données et afficher les graphiques
+            const patientsData = JSON.parse(localStorage.getItem('patients')) || [];
+            renderCharts(patientsData);
+            
+            // Mettre à jour les stats
+            document.getElementById('totalPatients').textContent = patientsData.length;
+            document.getElementById('criticalCases').textContent = patientsData.filter(p => p.stadeMRC >= 4).length;
+        });
+    </script>
+</body>
+</html>

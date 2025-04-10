@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Médecin - AI4CKD</title>
+    <link rel="stylesheet" href="inscription.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="registration-wrapper">
+        <div class="registration-container">
+            <div class="registration-header">
+                <div class="logo-container">
+                    <i class="fas fa-heartbeat logo-icon"></i>
+                    <span class="logo-text">AI4CKD</span>
+                </div>
+                <h1>Créer votre compte médecin</h1>
+                <p>Accédez à votre espace professionnel</p>
+            </div>
+
+            <form id="doctorRegistrationForm" class="registration-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="firstName">Prénom</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="lastName">Nom</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Email professionnel</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="phone">Téléphone</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-phone input-icon"></i>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="specialty">Spécialité médicale</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-stethoscope input-icon"></i>
+                        <select id="specialty" name="specialty" required>
+                            <option value="">Sélectionnez votre spécialité</option>
+                            <option value="Néphrologie">Néphrologie</option>
+                            <option value="Dialyse">Dialyse</option>
+                            <option value="Médecine Interne">Médecine Interne</option>
+                            <option value="Urologie">Urologie</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="password">Mot de passe</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirmPassword">Confirmer le mot de passe</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span>S'inscrire</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <div class="login-link">
+                    Vous avez déjà un compte ? <a href="connexion.html">Se connecter</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="illustration-side">
+            <img src="../../images/illustration.png" alt="Illustration médicale" class="medical-illustration">
+            <div class="quote">
+                <p>"Votre expertise au service de nos patients"</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="inscription.js"></script>
+</body>
+</html>

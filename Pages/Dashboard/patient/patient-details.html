@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails du Patient - AI4CKD</title>
+    <link rel="stylesheet" href="patient.css">
+    <script src="medical-analysis.js"></script>
+    <script src="patient-details.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>AI4CKD</h2>
+        <ul>
+            <li><a href="../dashboard.html">📊 Tableau de bord</a></li>
+            <li><a href="patient.html">👥 Patients</a></li>
+            <li><a href="../Rendez-vous/rendezvous.html">Rendez-vous</a></li>
+            <li><a href="#">⚙️ Paramètres</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <header>
+            <div class="search-container">
+                <input type="text" id="search" placeholder="🔍 Rechercher..." aria-label="Rechercher">
+            </div>
+            <div class="profile">👨⚕️ Dr. Dupont</div>
+        </header>
+        
+        <section class="patient-details">
+            <div class="section-header">
+                <h2>Détails du Patient</h2>
+                <button id="backBtn" class="back-btn">← Retour</button>
+            </div>
+            
+            <div id="patientInfo" class="patient-info">
+                <!-- Les informations du patient seront affichées ici -->
+            </div>
+            
+            <div class="lab-results-form">
+                <h3>Résultats de Laboratoire</h3>
+                <form id="labResultsForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="creatinine">Créatinine (mg/dL):</label>
+                            <input type="number" step="0.01" id="creatinine" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="gfr">DFG (ml/min/1.73m²):</label>
+                            <input type="number" step="0.1" id="gfr" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="albuminuria">Albuminurie (mg/g):</label>
+                            <input type="number" id="albuminuria" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="potassium">Potassium (mEq/L):</label>
+                            <input type="number" step="0.1" id="potassium" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Analyser avec l'IA</button>
+                    </div>
+                </form>
+                
+                <div id="analysisResult" class="analysis-result">
+                    <!-- Les résultats de l'analyse IA seront affichés ici -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+</body>
+</html>
