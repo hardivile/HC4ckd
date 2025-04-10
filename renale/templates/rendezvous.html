@@ -1,0 +1,127 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Rendez-vous - AI4CKD</title>
+    <link rel="stylesheet" href="{% static 'rendezvous.css' %}">
+    <!-- <script src="{% static 'rendezvous.js' %}"></script> -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+</head>
+<body>
+
+
+    <div class="sidebar" role="navigation">
+        <h1>AI4CKD</h1>
+        <ul>
+            <li><a href="{% url 'dm' %}" aria-current="page">📊 Tableau de bord</a></li>
+            <li><a href="{% url 'pat' %}">👥 Patients</a></li>
+            <li><a href="{% url 'rend' %}">🗓 Rendez-vous</a></li>
+            <li><a href="{% url 'par' %}">⚙️ Paramètres</a></li>
+        </ul>
+        <div class="sidebar-footer">
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+            <button id="logoutBtn" aria-label="Déconnexion">
+                🚪 Déconnexion</button>
+        </div>
+    </form>
+
+
+    </div>
+
+
+
+    <div class="container">
+        <h1><i class="fas fa-calendar-alt"></i> Gestion des Rendez-vous</h1>
+        
+        <!-- Formulaire d'ajout -->
+        <div class="card">
+            <h2>Nouveau Rendez-vous</h2>
+            <form id="appointmentForm" method="post" action="addrnd">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="patientId">Patient:</label>
+                    <select id="patientId" name="patientId">
+                        <option value="">Sélectionner un patient...</option>
+                        {% for x in pt %}
+                          <option 
+                            value="{{ x.id }}" 
+                            data-email="{{ x.email }}"
+                            data-nom="{{ x.nom }}"
+                            data-prenom="{{ x.prenoms }}"
+                          >
+                            {{ x.nom }} {{ x.prenoms }} (Stade {{ x.stade }})
+                          </option>
+                        {% endfor %}
+                      </select>
+                      
+                </div>
+                
+                <div class="form-group">
+                    <label for="appointmentDate">Date/Heure:</label>
+                    <input type="datetime-local" id="appointmentDate"  name="appointmentDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="appointmentType">Type:</label>
+                    <select id="appointmentType"  name="appointmentType" required>
+                        <option value="consultation">Consultation</option>
+                        <option value="examen">Examen médical</option>
+                        <option value="dialyse">Dialyse</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes:</label>
+                    <textarea id="notes"  name="notes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </form>
+        </div>
+        
+        <!-- Calendrier et Liste -->
+        <div class="grid-container">
+            <div class="card calendar-container">
+                <h2>Calendrier</h2>
+                <div id="calendar"></div>
+            </div>
+            
+            <div class="card appointments-list">
+                <h2>Prochains Rendez-vous</h2>
+                <div class="filters">
+                    <input type="text" id="searchAppointments" placeholder="Rechercher...">
+                    <select id="filterStatus">
+                        <option value="all">Tous</option>
+                        <option value="upcoming">À venir</option>
+                        <option value="completed">Terminés</option>
+                    </select>
+                </div>
+                <div id="appointmentsContainer">
+                    <!-- Rempli dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="rendezvous.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
+    <script>
+        // Rafraîchir la liste quand la page devient visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) loadPatients();
+        });
+        emailjs.init('IeSxgX_K6XM3wHjF1');
+    </script>
+</body>
+</html>

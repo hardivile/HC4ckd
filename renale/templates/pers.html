@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personnalisation des Workflows</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Personnalisation des Workflows de Suivi</h2>
+        <form action="/enregistrer_workflow" method="POST">
+            <!-- Nom du Workflow -->
+            <div class="mb-4">
+                <label for="workflow_name" class="form-label">Nom du Workflow</label>
+                <input type="text" class="form-control" id="workflow_name" name="workflow_name" required placeholder="Nom du workflow (ex: Suivi MRC Stade 3)">
+            </div>
+
+            <!-- Description du Workflow -->
+            <div class="mb-4">
+                <label for="workflow_description" class="form-label">Description du Workflow</label>
+                <textarea class="form-control" id="workflow_description" name="workflow_description" rows="3" required placeholder="Description détaillée du workflow"></textarea>
+            </div>
+
+            <!-- Sélection du Stade de la MRC -->
+            <div class="mb-4">
+                <label for="stade_mrc" class="form-label">Sélectionner le Stade de la MRC</label>
+                <select class="form-select" id="stade_mrc" name="stade_mrc" required>
+                    <option value="Stade 1">Stade 1</option>
+                    <option value="Stade 2">Stade 2</option>
+                    <option value="Stade 3">Stade 3</option>
+                    <option value="Stade 4">Stade 4</option>
+                    <option value="Stade 5">Stade 5</option>
+                </select>
+            </div>
+
+            <!-- Etapes du Workflow -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Étapes du Workflow</h5>
+                </div>
+                <div class="card-body">
+                    <div id="workflow_steps">
+                        <div class="row mb-3" id="step_1">
+                            <div class="col-md-8">
+                                <label for="step_name_1" class="form-label">Nom de l'Étape</label>
+                                <input type="text" class="form-control" id="step_name_1" name="steps[1][name]" required placeholder="Nom de l'étape">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="step_duration_1" class="form-label">Durée de l'Étape (jours)</label>
+                                <input type="number" class="form-control" id="step_duration_1" name="steps[1][duration]" required min="1">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="add_step_btn">Ajouter une Étape</button>
+                </div>
+            </div>
+
+            <!-- Notifications et Alertes -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Notifications et Alertes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="alert_condition" class="form-label">Condition de l'Alerte</label>
+                        <select class="form-select" id="alert_condition" name="alert_condition" required>
+                            <option value="Anomalie de test">Anomalie de test</option>
+                            <option value="Changement d'état">Changement d'état de santé</option>
+                            <option value="Rappel de suivi">Rappel de suivi à effectuer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alert_message" class="form-label">Message de l'Alerte</label>
+                        <textarea class="form-control" id="alert_message" name="alert_message" rows="3" required placeholder="Message à envoyer lors de l'alerte"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tâches Automatisées -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Tâches Automatisées</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="auto_task" class="form-label">Tâche Automatisée</label>
+                        <input type="text" class="form-control" id="auto_task" name="auto_task" placeholder="Exemple: Générer rapport d'examen" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="task_trigger" class="form-label">Déclencheur de la Tâche</label>
+                        <select class="form-select" id="task_trigger" name="task_trigger" required>
+                            <option value="Changement de statut">Changement de statut</option>
+                            <option value="Résultat d'examen critique">Résultat d'examen critique</option>
+                            <option value="Échéance de suivi">Échéance de suivi</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton de soumission -->
+            <button type="submit" class="btn btn-primary">Enregistrer le Workflow</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Ajouter des étapes de workflow dynamiquement
+        let stepCounter = 2; // Compteur pour les étapes
+        document.getElementById('add_step_btn').addEventListener('click', function() {
+            const stepContainer = document.getElementById('workflow_steps');
+            const newStepHTML = `
+                <div class="row mb-3" id="step_${stepCounter}">
+                    <div class="col-md-8">
+                        <label for="step_name_${stepCounter}" class="form-label">Nom de l'Étape</label>
+                        <input type="text" class="form-control" id="step_name_${stepCounter}" name="steps[${stepCounter}][name]" required placeholder="Nom de l'étape">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="step_duration_${stepCounter}" class="form-label">Durée de l'Étape (jours)</label>
+                        <input type="number" class="form-control" id="step_duration_${stepCounter}" name="steps[${stepCounter}][duration]" required min="1">
+                    </div>
+                </div>
+            `;
+            stepContainer.insertAdjacentHTML('beforeend', newStepHTML);
+            stepCounter++;
+        });
+    </script>
+</body>
+</html>

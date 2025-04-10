@@ -1,0 +1,170 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Patients - AI4CKD</title>
+    <link rel="stylesheet" href="{% static 'patient.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@^1.16.0/dist/pdf-lib.min.js"></script>
+    <script src="../auto-tasks.js" defer></script> <!-- Contient generatePatientReport -->
+    <script src="patient.js" defer></script>
+</head>
+<body>
+    <div class="sidebar" role="navigation">
+        <h1>AI4CKD</h1>
+        <ul>
+            <li><a href="{% url 'dm' %}" aria-current="page">📊 Tableau de bord</a></li>
+            <li><a href="{% url 'pat' %}">👥 Patients</a></li>
+            <li><a href="{% url 'rend' %}">🗓 Rendez-vous</a></li>
+            <li><a href="{% url 'par' %}">⚙️ Paramètres</a></li>
+        </ul>
+        <div class="sidebar-footer">
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+            <button id="logoutBtn" aria-label="Déconnexion">
+                🚪 Déconnexion</button>
+        </div>
+    </form>
+
+
+    </div>
+    
+    <div class="main-content">
+        <header>
+     
+<!-- 
+            <div class="container">
+                <form method="get" class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" name = "patient" placeholder=" 🔍 Rechercher un patient..." aria-label="Rechercher un patient">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                  </form>
+             </div> -->
+
+            <div class="profile">👨⚕️ Dr. Dupont</div>
+        </header>
+        
+        <section class="patient-management">
+            <div class="section-header">
+                <h2>Gestion des Patients</h2>
+                <button id="generateAllPdf" class="pdf-btn">📄 Exporter tous les PDF</button>
+            </div>
+            
+            <div class="form-container">
+                <h3>Ajouter un nouveau patient</h3>
+                <form action="{% url 'uprec' pt.id %}"  id="patientForm" method="post">
+                    {% csrf_token %}
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="lastName">Nom:</label>
+                            <input type="text" id="lastName" name="lastName" value="{{pt.nom}}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="firstName">Prénom:</label>
+                            <input type="text" id="firstName"  name="firstName" value="{{pt.prenoms}}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="age">Âge:</label>
+                            <input type="number" id="age"  name="age" min="0" max="120" value="{{pt.age}}">
+                        </div>
+                            
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email"  name="email" value="{{pt.email}}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ckdStage">Stade MRC:</label>
+                            <select id="ckdStage"  name="ckdStage" value="{{pt.stade}}" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="1">Stade 1</option>
+                                <option value="2">Stade 2</option>
+                                <option value="3">Stade 3</option>
+                                <option value="4">Stade 4</option>
+                                <option value="5">Stade 5</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastExam">Dernier examen:</label>
+                            <input type="date" id="lastExam" name="lastExam" value="{{pt.date}}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn" >Enregistrer</button>
+                        <button type="reset" class="cancel-btn">Annuler</button>
+                    </div>
+                </form>
+            </div>
+            
+
+        </section>
+    </div>
+                <!-- Modale de confirmation -->
+                <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Êtes-vous sûr de vouloir supprimer ce patient ?
+                            </div>
+                            <div class="modal-footer">
+                                <form id="deleteForm" method="post" action="">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
+                                    <button type="submit" class="btn btn-primary">Oui</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+    
+    
+                <script>
+                    var confirmDeleteModal = document.getElementById('confirmDeleteModal');
+                    confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+                        var button = event.relatedTarget; // bouton cliqué
+                        var id = button.getAttribute('data-id'); // ID de l'affectation
+                        var form = confirmDeleteModal.querySelector('#deleteForm');
+                        form.action = "{% url 'SupP' 0 %}".replace('0', id); // Remplacez 0 par l'ID réel
+                });
+            </script>
+
+
+
+    <script>
+        // Script pour le bouton "Exporter tous les PDF"
+        document.getElementById('generateAllPdf').addEventListener('click', function() {
+            const patients = JSON.parse(localStorage.getItem('patients')) || [];
+            if (patients.length === 0) {
+                alert("Aucun patient à exporter");
+                return;
+            }
+            
+            if (confirm(`Exporter ${patients.length} rapports PDF ?`)) {
+                patients.forEach(patient => {
+                    if (window.generatePatientReport) {
+                        setTimeout(() => {
+                            generatePatientReport(patient);
+                        }, 1000); // Délai pour éviter le blocage navigateur
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
