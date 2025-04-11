@@ -19,7 +19,6 @@ Cette application permet la gestion des patients atteints de maladies chroniques
 
 - Python & Django (backend)
 - SQLite (base de données native Django)
-- Django REST Framework (API)
 - Django Auth (sécurité intégrée)
 - HTML, CSS et Javascript (frontend) 
 
