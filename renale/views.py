@@ -93,6 +93,16 @@ def par(request):
 
     return render(request, 'parametres.html')
 
+
+def da(request):
+
+    return render(request, 'da.html')
+
+def med(request):
+    users  = CustomUser.objects.filter(user_type='medecin')
+
+    return render(request, 'medecin.html', {'users': users})
+
 def rend(request):
     
     pt= Patient.objects.all()
@@ -157,12 +167,71 @@ def ins(request):
 
     return render(request, 'inscription_medecin.html')
 
+
+
+
+
+
+
+def ins_admin(request):
+    if request.method == 'POST':
+        # Récupérer les données du formulaire
+        nom = request.POST.get('lastName')
+        prenoms = request.POST.get('firstName')
+        email = request.POST.get('email')
+        tel = request.POST.get('phone')
+        specialite = request.POST.get('specialty')
+        password = request.POST.get('password')
+        password1 = request.POST.get('confirmPassword')
+
+        # Vérifier que les mots de passe correspondent
+        if password != password1:
+            messages.error(request, "Les mots de passe ne correspondent pas.")
+            return redirect('ins_admin')
+
+        # Vérifier si l'email ou le nom d'utilisateur existe déjà
+        User = get_user_model()
+
+        # Vérification d'existence de l'email
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Cet email est déjà utilisé.")
+            return redirect('ins_admin')
+
+        # Vérification d'existence du nom d'utilisateur
+        if User.objects.filter(nom=nom).exists():
+            messages.error(request, "Nom d'utilisateur déjà utilisé.")
+            return redirect('ins_admin')
+
+        # Créer l'utilisateur admin
+        user = User.objects.create_user(
+            username=nom,
+            email=email,
+            password=password,
+            prenoms=prenoms,
+            tel=tel,
+            nom=nom,
+            specialite=specialite,
+            user_type='admin',  # Spécifier le type d'utilisateur
+        )
+
+        # Sauvegarder l'utilisateur
+        user.save()
+
+        messages.success(request, "Inscription réussie.")
+        return redirect('con')  # Rediriger vers la page de connexion
+
+    return render(request, 'inscription_admin.html')
+
+
+
+
+
+
+
 def con(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-
-
 
         User = get_user_model()
         try:
@@ -173,16 +242,28 @@ def con(request):
 
         if user.check_password(password):
             login(request, user)
-            if user.user_type == 'medecin':
-                return redirect('dm')
-            else :
-                messages.error(request,"Type d'utilisateur non reconnu." )
+
+            redirects = {
+                'medecin': 'dm',
+                'admin': 'da',
+            }
+
+            redirect_url = redirects.get(user.user_type)
+
+            if redirect_url:
+                return redirect(redirect_url)
+            else:
+                messages.error(request, "Type d'utilisateur non reconnu.")
                 return redirect('con')
-        else : 
+
+        else:
             messages.error(request, "Nom d'utilisateur ou mot de passe incorrect.")
-            return redirect ('con') 
+            return redirect('con')
 
     return render(request, 'connexion.html')
+
+
+
 
 
 

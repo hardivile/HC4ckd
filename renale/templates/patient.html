@@ -1,6 +1,5 @@
 {% load static %}
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,14 +10,9 @@
     <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
     <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
 
-    <!-- <script src="{% static 'patient.js' %}"></script> -->
-
-
-
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@^1.16.0/dist/pdf-lib.min.js"></script>
-    <script src="../auto-tasks.js" defer></script> <!-- Contient generatePatientReport -->
+    <script src="../auto-tasks.js" defer></script>
     <script src="patient.js" defer></script>
 </head>
 <body>
@@ -31,41 +25,37 @@
             <li><a href="{% url 'par' %}">⚙️ Paramètres</a></li>
         </ul>
         <div class="sidebar-footer">
-    <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-            <button id="logoutBtn" aria-label="Déconnexion">
-                🚪 Déconnexion</button>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button id="logoutBtn" aria-label="Déconnexion">
+                    🚪 Déconnexion
+                </button>
+            </form>
         </div>
-    </form>
-
-
     </div>
-    
+
     <div class="main-content">
         <header>
-     
-
             <div class="container">
                 <form method="get" class="d-flex" role="search">
-                    <input class="form-control me-2" type="search" name = "patient" placeholder=" 🔍 Rechercher un patient..." aria-label="Rechercher un patient">
+                    <input class="form-control me-2" type="search" name="patient" placeholder=" 🔍 Rechercher un patient..." aria-label="Rechercher un patient">
                     <button class="btn btn-outline-success" type="submit">Search</button>
-                  </form>
-             </div>
+                </form>
+            </div>
 
             <div class="profile">👨⚕️ Dr. Dupont</div>
         </header>
-        
+
         <section class="patient-management">
             <div class="section-header">
                 <h2>Gestion des Patients</h2>
                 <button id="generateAllPdf" class="pdf-btn">📄 Exporter tous les PDF</button>
             </div>
-            
+
             <div class="form-container">
                 <h3>Ajouter un nouveau patient</h3>
-                <form action="{% url 'addp' %}"  id="patientForm" method="post">
+                <form action="{% url 'addp' %}" id="patientForm" method="post">
                     {% csrf_token %}
-
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="lastName">Nom:</label>
@@ -74,22 +64,22 @@
                         
                         <div class="form-group">
                             <label for="firstName">Prénom:</label>
-                            <input type="text" id="firstName"  name="firstName">
+                            <input type="text" id="firstName" name="firstName">
                         </div>
                         
                         <div class="form-group">
                             <label for="age">Âge:</label>
-                            <input type="number" id="age"  name="age" min="0" max="120">
+                            <input type="number" id="age" name="age" min="0" max="120">
                         </div>
-                            
+                        
                         <div class="form-group">
                             <label for="email">Email:</label>
-                            <input type="email" id="email"  name="email">
+                            <input type="email" id="email" name="email">
                         </div>
 
                         <div class="form-group">
                             <label for="ckdStage">Stade MRC:</label>
-                            <select id="ckdStage"  name="ckdStage" required>
+                            <select id="ckdStage" name="ckdStage" required>
                                 <option value="">Sélectionner...</option>
                                 <option value="1">Stade 1</option>
                                 <option value="2">Stade 2</option>
@@ -106,12 +96,12 @@
                     </div>
                     
                     <div class="form-actions">
-                        <button type="submit" class="submit-btn" >Enregistrer</button>
+                        <button type="submit" class="submit-btn">Enregistrer</button>
                         <button type="reset" class="cancel-btn">Annuler</button>
                     </div>
                 </form>
             </div>
-            
+
             <div class="patient-list">
                 <h3>Liste des Patients</h3>
                 <div class="table-responsive">
@@ -132,146 +122,64 @@
                                     <td>{{ a.nom }}</td>
                                     <td>{{ a.prenoms }}</td>
                                     <td>{{ a.age }}</td>
-                                    <td>{{ a.stade }}</td>  
+                                    <td>{{ a.stade }}</td>
                                     <td>{{ a.date|date:"d/m/Y" }}</td>  
-                                       
-                                    <td colspan = "3"> 
 
+                                    <td>
+                                        <a href="update/{{ a.id }}">
+                                            <button class="btn btn-warning btn-sm">Modifier</button>
+                                        </a>
 
-                                        <a href=" update/{{a.id}}"> <button class="btn btn-warning btn-sm" >modifier </button> 
-                                        
-                                
-
-                                    <button class="btn btn-danger btn-sm" 
-                                    data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ a.id }}"
-                                    >
-
-                                        supprimer
-                                    </button>
-                                </td>
-
+                                        <button class="btn btn-danger btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#confirmDeleteModal"
+                                                data-id="{{ a.id }}">
+                                            Supprimer
+                                        </button>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
-                        
                     </table>
-                    
                 </div>
             </div>
         </section>
     </div>
-                <!-- Modale de confirmation -->
-                <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                Êtes-vous sûr de vouloir supprimer ce patient ?
-                            </div>
-                            <div class="modal-footer">
-                                <form id="deleteForm" method="post" action="">
-                                    {% csrf_token %}
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
-                                    <button type="submit" class="btn btn-primary">Oui</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+
+    <!-- Modale de confirmation -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            
-    
-    
-                <script>
-                    var confirmDeleteModal = document.getElementById('confirmDeleteModal');
-                    confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
-                        var button = event.relatedTarget; // bouton cliqué
-                        var id = button.getAttribute('data-id'); // ID de l'affectation
-                        var form = confirmDeleteModal.querySelector('#deleteForm');
-                        form.action = "{% url 'SupP' 0 %}".replace('0', id); // Remplacez 0 par l'ID réel
-                });
-            </script>
-
-
+                <div class="modal-body">
+                    Êtes-vous sûr de vouloir supprimer ce patient ?
+                </div>
+                <div class="modal-footer">
+                    <!-- Formulaire pour la suppression -->
+                    <form id="deleteForm" method="POST" action="">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
+                        <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Script pour le bouton "Exporter tous les PDF"
-        document.getElementById('generateAllPdf').addEventListener('click', function() {
-            const patients = JSON.parse(localStorage.getItem('patients')) || [];
-            if (patients.length === 0) {
-                alert("Aucun patient à exporter");
-                return;
-            }
-            
-            if (confirm(`Exporter ${patients.length} rapports PDF ?`)) {
-                patients.forEach(patient => {
-                    if (window.generatePatientReport) {
-                        setTimeout(() => {
-                            generatePatientReport(patient);
-                        }, 1000); // Délai pour éviter le blocage navigateur
-                    }
-                });
-            }
-        });
-    </script>
-
-
-
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-const searchInputs = document.querySelectorAll('.form-control');
-
-searchInputs.forEach(input => {
-    input.addEventListener('input', function() {
-        const params = new URLSearchParams();
-        searchInputs.forEach(i => {
-            if (i.value) {
-                params.append(i.name, i.value);
-            }
-        });
-
-        fetch(`/dm/?${params.toString()}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.querySelector('tbody');
-            tableBody.innerHTML = '';
-
-            data.data.forEach(courrier => {
-                const row = `
-                <tr>
-                    
-                    <td>${courrier.nom}</td>
-                    <td>${courrier.age}</td>
-                    <td>${courrier.stade}</td>
-                    <td>${courrier.date}</td>
-                   
-                   
-                    
-                     <td>
-                            <button class="btn btn-warning btn-sm" >
-                                    <a href=" update/{{a.id}}"> modifier</a>
-                                    
-                                </button>    
-                    </td>
-
-                    
-                    </tr>`;
-                tableBody.innerHTML += row;
-                
+        // JavaScript pour afficher la modal après la suppression
+        document.addEventListener('DOMContentLoaded', function () {
+            const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+            confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;  // Bouton qui a déclenché la modal
+                var id = button.getAttribute('data-id');  // ID du patient
+                var form = confirmDeleteModal.querySelector('#deleteForm');
+                form.action = "{% url 'SupP' 0 %}".replace('0', id);  // Remplacer l'ID dans l'action
             });
         });
-    });
-});
-});
-
-</script>
+    </script>
 </body>
 </html>

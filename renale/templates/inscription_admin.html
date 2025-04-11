@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription Médecin - AI4CKD</title>
+    <title>Inscription Admin - AI4CKD</title>
     
     <link rel="stylesheet" href="{% static 'inscription.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -18,7 +18,7 @@
                     <i class="fas fa-heartbeat logo-icon"></i>
                     <span class="logo-text">AI4CKD</span>
                 </div>
-                <h1>Créer votre compte Médecin</h1>
+                <h1>Créer votre compte Admin</h1>
                 <p>Accédez à votre espace professionnel</p>
             </div>
 
@@ -26,7 +26,7 @@
             <div class="alert alert-info">{{ message }}</div>
         {% endfor %}
 
-            <form  action="{% url 'ins' %}" method="POST" id="doctorRegistrationForm" class="registration-form">
+            <form  action="{% url 'ins_admin' %}" method="POST" id="doctorRegistrationForm" class="registration-form">
 
                 {% csrf_token %}
 
@@ -109,7 +109,7 @@
         </div>
 
         <div class="illustration-side">
-            <img src="{% static 'img/illustration.png' %}" alt="Illustration médicale" class="medical-illustration">
+            <img  src="{% static 'img/illustration.png' %}" alt="Illustration médicale" class="medical-illustration">
             <div class="quote">
                 <p>"Votre expertise au service de nos patients"</p>
             </div>

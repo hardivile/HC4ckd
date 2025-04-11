@@ -1,0 +1,47 @@
+<!-- user_list.html -->
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
+    <title>Liste des Medecins</title>
+</head>
+<body>
+    <h1>Liste des Medecins</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Email</th>
+
+                <th>Spcialite medicale</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.first_name }} {{ user.username }}</td>
+                <td>{{ user.email }}</td>
+
+                <td>{{ user.specialite }}</td>
+                <td>
+                    <a href="#">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+
+
+
+  
+</body>
+</html>

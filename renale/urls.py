@@ -11,6 +11,10 @@ urlpatterns = [
     path( "enr", views.enr, name="enr"  ),
     path( "pers", views.pers, name="pers"  ),
     path( "ins", views.ins, name="ins"  ),
+
+    path( "ins_admin", views.ins_admin, name="ins_admin"  ),
+
+
     path( "con", views.con, name="con"  ),
     path('update/<int:id>/', views.update,name="update"),
     path('update/uprec/<int:id>/',views.uprec,name="uprec"),
@@ -18,6 +22,10 @@ urlpatterns = [
 
 
     path( "dm", views.dm, name="dm"  ),
+    path( "da", views.da, name="da"  ),
+    path( "med", views.med, name="med"  ),
+
+
     path( "pat", views.pat, name="pat"  ),
     path( "rend", views.rend, name="rend"  ),
     path( "par", views.par, name="par"  ),
