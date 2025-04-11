@@ -125,24 +125,54 @@
                             <td>{{ a.stade }}</td>  
                             <td>{{ a.date|date:"d/m/Y" }}</td>  
                                
-                            <td colspan = "3"> 
 
-                                <a href=" update/{{a.id}}"> <button class="btn btn-warning btn-sm" >modifier </button> 
+                            <td>
+                                <a href="update/{{ a.id }}">
+                                    <button class="btn btn-warning btn-sm">Modifier</button>
+                                </a>
 
-
-                            <button class="btn btn-danger btn-sm" 
-                            data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ a.id }}"
-                            >
-
-                                supprimer
-                            </button>
-                        </td>
+                                <button class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmDeleteModal"
+                                        data-id="{{ a.id }}">
+                                    Supprimer
+                                </button>
+                            </td>
 
                         </tr>
                     {% endfor %}
                                     </tbody>
                 </table>
             </div>
+
+
+
+
+    <!-- Modale de confirmation -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Êtes-vous sûr de vouloir supprimer ce patient ?
+                </div>
+                <div class="modal-footer">
+                    <!-- Formulaire pour la suppression -->
+                    <form id="deleteForm" method="POST" action="">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
+                        <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
             <nav class="pagination" aria-label="Pagination">
                 <a href="./patient/patient.html">Voir tous les patients</a>
             </nav>
@@ -321,7 +351,18 @@
 
     
     
-    
+<script>
+    // JavaScript pour afficher la modal après la suppression
+    document.addEventListener('DOMContentLoaded', function () {
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;  // Bouton qui a déclenché la modal
+            var id = button.getAttribute('data-id');  // ID du patient
+            var form = confirmDeleteModal.querySelector('#deleteForm');
+            form.action = "{% url 'SupP' 0 %}".replace('0', id);  // Remplacer l'ID dans l'action
+        });
+    });
+</script> 
     
 </body>
 </html>
