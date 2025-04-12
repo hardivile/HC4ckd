@@ -26,9 +26,7 @@ SECRET_KEY = 'django-insecure-%6vye^9!g^$#@5q$)1z(xix6e6$w(p0hn_$5of98n)k1cq0i*d
 DEBUG = True
 
 ALLOWED_HOSTS = ['ai4ckd-quietude-production.up.railway.app']
-CSRF_TRUSTED_ORIGINS = [
-    'ai4ckd-quietude-production.up.railway.app',
-]
+
 
 
 
@@ -131,5 +129,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'renale.CustomUser'  # Assurez-vous que cela pointe vers votre modèle personnalisé
 
 LOGOUT_REDIRECT_URL = 'home'
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://ai4ckd-quietude-production.up.railway.app",
+]
+
+
 
 
