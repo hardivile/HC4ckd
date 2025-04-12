@@ -95,8 +95,46 @@ def par(request):
 
 
 def da(request):
+    pt = Patient.objects.all()
 
-    return render(request, 'da.html')
+    if request.method == "GET":
+        rec = request.GET.get('patient')
+        if rec: 
+            pt = Patient.objects.filter(nom__icontains=rec)
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            data = list(pt.values())
+            return JsonResponse({'data': data})
+
+    total_pt = pt.count()
+    rd = Rdv.objects.all()
+    total_rd = rd.count() 
+    cct = pt.filter(stade__gte=4).count()
+
+    today = timezone.now().date()
+    last_30_days = [today - timedelta(days=i) for i in range(29, -1, -1)]
+
+    # Format des dates : ex. "10 avr"
+    last_30_days_labels = [day.strftime('%d %b') for day in last_30_days]
+
+    daily_new_patients = [
+        pt.filter(date__year=day.year, date__month=day.month, date__day=day.day).count()
+        for day in last_30_days
+    ]
+
+    context = {
+        'total_pt': total_pt,
+        'total_rd': total_rd,
+        'cct': cct,
+        'pt': pt,
+        'stages_count': [pt.filter(stade=i).count() for i in range(1, 6)],
+        'daily_new_patients': daily_new_patients,
+        'last_30_days_labels': last_30_days_labels,
+    }
+    
+    return render(request, 'da.html', context)
+
+
 
 def med(request):
     users  = CustomUser.objects.filter(user_type='medecin')
