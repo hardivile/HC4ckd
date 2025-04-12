@@ -9,21 +9,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sidebar" role="navigation">
-        <h1>AI4CKD</h1>
-        <ul>
-            <li><a href="{% url 'dm' %}" aria-current="page">📊 Tableau de bord</a></li>
-            <li><a href="{% url 'pat' %}">👥 Patients</a></li>
-            <li><a href="{% url 'rend' %}">🗓 Rendez-vous</a></li>
-            <li><a href="{% url 'par' %}">⚙️ Paramètres</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <form action="{% url 'logout' %}" method="post">
-                {% csrf_token %}
-                <button id="logoutBtn" aria-label="Déconnexion">🚪 Déconnexion</button>
-            </form>
-        </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">AI4CKD</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'dm' %}">📊 Tableau de bord</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'pat' %}">👥 Patients</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'rend' %}">🗓 Rendez-vous</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'par' %}">⚙️ Paramètres</a>
+        </li>
+      </ul>
+
+      <form class="d-flex" action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-outline-light" id="logoutBtn" aria-label="Déconnexion">🚪 Déconnexion</button>
+      </form>
     </div>
+  </div>
+</nav>
+
 
     <div class="container">
         <h1><i class="fas fa-calendar-alt"></i> Gestion des Rendez-vous</h1>
