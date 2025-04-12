@@ -307,19 +307,28 @@ def con(request):
 
 def addp(request):
     if request.method == 'POST':
-        try:
-            # Gardez seulement les champs obligatoires
-            patient = Patient.objects.create(
-                nom=request.POST.get('lastName'),
-                prenoms=request.POST.get('firstName'),
-                age=request.POST.get('age'),
-                email=request.POST.get('email'),
-                date=request.POST.get('lastExam'),
-                # stade reste null à la création
-            )
-            return ('pat')
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        a = request.POST.get('lastName')
+        b = request.POST.get('firstName')
+        c = request.POST.get('age')
+        d = request.POST.get('email')
+        
+        f = request.POST.get('lastExam')
+
+        pat = Patient(
+
+
+
+                nom = a,
+                prenoms = b,
+                age = c,
+                email = d,
+                
+            
+                date=f,
+        )
+        pat.save()
+        return redirect('pat')
+    return redirect('pat')
 
 
 
