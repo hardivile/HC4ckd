@@ -317,7 +317,7 @@ def addp(request):
                 date=request.POST.get('lastExam'),
                 # stade reste null à la création
             )
-            return JsonResponse({'success': True, 'id': patient.id})
+            return ('pat')
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
