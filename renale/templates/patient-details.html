@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="patient-details-container">
+    <div class="patient-header">
+        <h2>Détails du Patient: {{ patient.nom }} {{ patient.prenoms }}</h2>
+        <a href="{% url 'pat' %}" class="btn btn-outline-secondary back-btn">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+    
+    <div class="card patient-info-card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Âge:</strong> {{ patient.age }} ans</p>
+                    <p><strong>Email:</strong> {{ patient.email|default:"Non renseigné" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Stade MRC:</strong> 
+                        <span class="badge stage-badge" data-stage="{{ patient.stade|default:0 }}">
+                            {{ patient.stade|default:"En attente d'analyse" }}
+                        </span>
+                    </p>
+                    <p><strong>Dernier examen:</strong> {{ patient.date|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="analysis-section">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-flask"></i> Analyse Médicale</h3>
+            </div>
+            
+            <div class="card-body">
+                {% if patient.stade %}
+                    {% include 'partials/analysis_results.html' %}
+                {% else %}
+                    {% include 'partials/analysis_form.html' %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'modals/loading_modal.html' %}
+
+<link rel="stylesheet" href="{% static 'patient-details.css' %}">
+<script src="{% static 'bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'patient-details.js' %}"></script>
+{% endblock %}

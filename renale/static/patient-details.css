@@ -1,0 +1,81 @@
+.patient-details-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.patient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.patient-info-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.stage-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.stage-badge[data-stage="1"] { background-color: #28a745; color: white; }
+.stage-badge[data-stage="2"] { background-color: #5bc0de; color: white; }
+.stage-badge[data-stage="3"] { background-color: #ffc107; color: black; }
+.stage-badge[data-stage="4"] { background-color: #fd7e14; color: white; }
+.stage-badge[data-stage="5"] { background-color: #dc3545; color: white; }
+.stage-badge[data-stage="0"] { background-color: #6c757d; color: white; }
+
+.stage-display {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    color: white;
+    text-align: center;
+    line-height: 50px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.stage-display[data-stage="1"] { background-color: #28a745; }
+.stage-display[data-stage="2"] { background-color: #5bc0de; }
+.stage-display[data-stage="3"] { background-color: #ffc107; }
+.stage-display[data-stage="4"] { background-color: #fd7e14; }
+.stage-display[data-stage="5"] { background-color: #dc3545; }
+
+.recommendations-list {
+    padding-left: 20px;
+}
+
+.lab-form .form-group {
+    margin-bottom: 15px;
+}
+
+.analysis-results pre {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.card-header {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.submit-btn {
+    padding: 10px 25px;
+    font-size: 1.1rem;
+}
+
+.back-btn {
+    padding: 8px 15px;
+}

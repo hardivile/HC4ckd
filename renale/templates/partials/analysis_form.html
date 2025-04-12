@@ -1,0 +1,69 @@
+<div class="no-analysis">
+    <div class="alert alert-warning">
+        <h4><i class="fas fa-exclamation-triangle"></i> Analyse requise</h4>
+        <p>Ce patient n'a pas encore été analysé. Veuillez saisir les données de laboratoire ci-dessous.</p>
+    </div>
+    
+
+    <div class="alert-container"></div>
+
+    <div id="loadingModal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="spinner-border text-primary"></div>
+                    <p>Analyse en cours...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="labDataForm" class="lab-form">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="gfr">DFG (ml/min/1.73m²)</label>
+                    <input type="number" class="form-control" id="gfr" name="gfr" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="albuminuria">Albuminurie (mg/g)</label>
+                    <input type="number" class="form-control" id="albuminuria" name="albuminuria" min="0">
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="creatinine">Créatinine (μmol/L)</label>
+                    <input type="number" class="form-control" id="creatinine" name="creatinine" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="hb">Hémoglobine (g/dL)</label>
+                    <input type="number" step="0.1" class="form-control" id="hb" name="hb" min="0">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions text-center mt-3">
+            <button type="submit" id="analyzeBtn" class="btn btn-primary btn-lg submit-btn">
+                <i class="fas fa-play"></i> Lancer l'analyse
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Test immédiat du bouton
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('analyzeBtn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                alert('Test - Le bouton fonctionne !');
+                // Votre code d'analyse ira ici
+            });
+        } else {
+            console.error("Erreur : Bouton non trouvé ! Vérifiez l'ID");
+        }
+    });
+</script>

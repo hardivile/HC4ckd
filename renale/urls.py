@@ -31,12 +31,14 @@ urlpatterns = [
     path( "par", views.par, name="par"  ),
     path( "addp", views.addp, name="addp"  ),
     path( "addrnd", views.addrnd, name="addrnd"  ),
+    path('patient-details/<int:patient_id>/', views.patient_details, name='patient_details'),
+    path('api/analyze-patient/<int:patient_id>/', views.analyze_patient, name='analyze_patient'),
 
 
     path( "pat/SupP/<int:id>/", views.SupP, name="SupP"  ),
     
 
-
+    path('analyze/', views.analyze_data, name='analyze_data'),
 
 
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),

@@ -1,84 +1,122 @@
+// Utiliser le cache global existant
 document.addEventListener('DOMContentLoaded', function() {
-    initCalendar();
-    loadPatients();
+    // Vérifier que le cache global existe
+    if (!window.appointmentCache) {
+        window.appointmentCache = {
+            dateFormat: {},
+            patients: [],
+            appointments: []
+        };
+    }
     
-    // Gestion du formulaire
+    // Initialisations dans l'ordre correct - d'abord les données, puis l'UI
+    loadPatients(true);  // Charger les patients d'abord
+    setTimeout(() => {   // Ajouter un délai pour s'assurer que les données sont chargées
+        initCalendar();  // Initialiser le calendrier ensuite
+        loadAppointments(); // Puis charger les rendez-vous
+    }, 300);
+
+    // Événements
     document.getElementById('appointmentForm').addEventListener('submit', function(e) {
         e.preventDefault();
         saveAppointment();
     });
 
     // Filtres avec debounce
-    let searchTimeout;
-    document.getElementById('filterStatus').addEventListener('change', loadAppointments);
-    document.getElementById('searchAppointments').addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(loadAppointments, 300);
-    });
-    
-    loadAppointments();
+    const debounce = (func, delay) => {
+        let timeout;
+        return function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, arguments), delay);
+        };
+    };
+
+    document.getElementById('filterStatus').addEventListener('change', () => loadAppointments());
+    document.getElementById('searchAppointments').addEventListener('input', debounce(() => loadAppointments(), 300));
 });
 
-// Initialisation optimisée de FullCalendar
+/* CALENDRIER */
 function initCalendar() {
     const calendarEl = document.getElementById('calendar');
-    if (calendarEl._fullCalendar) {
-        calendarEl._fullCalendar.destroy();
+    if (!calendarEl) return;
+
+    // Nettoyage si existe déjà
+    if (window.calendarInstance) {
+        window.calendarInstance.destroy();
     }
-    
-    calendarEl._fullCalendar = new FullCalendar.Calendar(calendarEl, {
+
+    // Nouvelle instance
+    window.calendarInstance = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        eventClick: function(info) {
-            editAppointment(info.event.id);
-        },
-        events: []
+        events: [],
+        eventClick: (info) => editAppointment(info.event.id)
     });
-    calendarEl._fullCalendar.render();
+
+    window.calendarInstance.render();
 }
 
-async function loadPatients() {
+/* PATIENTS */
+function loadPatients(initialLoad = false) {
     try {
-        const patients = JSON.parse(localStorage.getItem('patients')) || [];
+        // Ne pas chercher dans localStorage, les patients sont déjà dans la page
+        // Les options sont générées côté serveur dans le HTML (Django)
         const select = document.getElementById('patientId');
-        const todayAppointments = getTodayAppointments();
+        if (!select) return;
         
-        select.innerHTML = '<option value="">Sélectionner un patient...</option>';
-        patients.forEach(patient => {
-            if (!todayAppointments.includes(patient.id)) {
-                const option = document.createElement('option');
-                option.value = patient.id;
-                option.textContent = `${patient.nom} ${patient.prenom} (Stade ${patient.stadeMRC})`;
-                option.dataset.email = patient.email || '';
-                select.appendChild(option);
+        // Si le select existe déjà et a des options, les garder et les mettre en cache
+        if (select.options.length > 0) {
+            const patients = [];
+            for (let i = 1; i < select.options.length; i++) {  // Ignorer l'option par défaut
+                const option = select.options[i];
+                patients.push({
+                    id: option.value,
+                    nom: option.dataset.nom,
+                    prenoms: option.dataset.prenom,
+                    email: option.dataset.email,
+                    stade: option.textContent.match(/\(Stade ([^)]+)\)/)?.[1] || ""
+                });
             }
-        });
+            window.appointmentCache.patients = patients;
+        }
+        
+        // Sinon, on pourrait effectuer une requête AJAX vers l'API Django
+        // pour récupérer les patients si nécessaire, mais ce n'est pas le cas ici
+        
     } catch (error) {
         console.error("Erreur chargement patients:", error);
         showNotification('Erreur de chargement des patients', 'error');
     }
 }
 
-function getTodayAppointments() {
-    const today = new Date().toISOString().split('T')[0];
-    const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-    return appointments
-        .filter(app => app.date.startsWith(today))
-        .map(app => app.patientId);
-}
-
-async function loadAppointments() {
+/* RENDEZ-VOUS */
+function loadAppointments() {
     try {
         const statusFilter = document.getElementById('filterStatus').value;
         const searchTerm = document.getElementById('searchAppointments').value.toLowerCase();
         
-        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        // Charger les rendez-vous - ici nous pourrions faire une requête AJAX
+        // mais pour l'exemple nous utilisons les rendez-vous déjà chargés
+        let appointments = [];
+        
+        // Si on a déjà des rendez-vous en cache, les utiliser
+        if (window.appointmentCache.appointments && window.appointmentCache.appointments.length > 0) {
+            appointments = window.appointmentCache.appointments;
+        } else {
+            // Sinon, on pourrait faire une requête AJAX ici
+            // Mais pour le moment, nous utilisons ce qui est stocké en localStorage pour des tests
+            appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+            window.appointmentCache.appointments = appointments;
+        }
+        
+        // Tri par date
         appointments.sort((a, b) => new Date(a.date) - new Date(b.date));
         
+        // Filtrage
         const now = new Date();
         const filteredAppointments = appointments.filter(app => {
             const isUpcoming = new Date(app.date) > now;
@@ -108,6 +146,8 @@ async function loadAppointments() {
 
 function displayAppointments(appointments) {
     const container = document.getElementById('appointmentsContainer');
+    if (!container) return;
+    
     container.innerHTML = '';
     
     if (appointments.length === 0) {
@@ -142,6 +182,7 @@ function displayAppointments(appointments) {
         container.appendChild(appElement);
     });
     
+    // Gestion des événements
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function() {
             editAppointment(this.getAttribute('data-id'));
@@ -158,23 +199,12 @@ function displayAppointments(appointments) {
 }
 
 function updateCalendar(appointments) {
-    const calendarEl = document.getElementById('calendar');
+    if (!window.calendarInstance) return;
     
-    if (calendarEl._fullCalendar) {
-        calendarEl._fullCalendar.destroy();
-    }
+    window.calendarInstance.removeAllEvents();
     
-    calendarEl._fullCalendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        eventClick: function(info) {
-            editAppointment(info.event.id);
-        },
-        events: appointments.map(app => ({
+    appointments.forEach(app => {
+        window.calendarInstance.addEvent({
             id: app.id,
             title: `${app.patientNom} - ${app.type}`,
             start: app.date,
@@ -183,25 +213,22 @@ function updateCalendar(appointments) {
                 patientId: app.patientId
             },
             color: new Date(app.date) < new Date() ? '#6c757d' : '#007bff'
-        }))
+        });
     });
-    
-    calendarEl._fullCalendar.render();
 }
 
-async function editAppointment(appointmentId) {
+/* GESTION DES RDV */
+function editAppointment(appointmentId) {
     try {
-        const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-        const appointment = appointments.find(a => a.id === appointmentId);
-        
+        const appointment = window.appointmentCache.appointments.find(a => a.id === appointmentId);
         if (!appointment) throw new Error('Rendez-vous introuvable');
         
-        document.getElementById('patientId').value = appointment.patientId;
-        document.getElementById('appointmentDate').value = formatDateForInput(appointment.date);
-        document.getElementById('appointmentType').value = appointment.type;
-        document.getElementById('notes').value = appointment.notes || '';
-        
         const form = document.getElementById('appointmentForm');
+        form.patientId.value = appointment.patientId;
+        form.appointmentDate.value = formatDateForInput(appointment.date);
+        form.appointmentType.value = appointment.type;
+        form.notes.value = appointment.notes || '';
+        
         form.dataset.editingId = appointmentId;
         form.querySelector('button[type="submit"]').textContent = 'Mettre à jour';
         form.scrollIntoView({ behavior: 'smooth' });
@@ -212,12 +239,14 @@ async function editAppointment(appointmentId) {
     }
 }
 
-async function deleteAppointment(appointmentId) {
+function deleteAppointment(appointmentId) {
     try {
-        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-        appointments = appointments.filter(a => a.id !== appointmentId);
-        
+        // Dans un vrai système, on ferait une requête AJAX pour supprimer le rendez-vous
+        // Pour l'exemple, nous mettons juste à jour le localStorage
+        let appointments = window.appointmentCache.appointments.filter(a => a.id !== appointmentId);
+        window.appointmentCache.appointments = appointments;
         localStorage.setItem('appointments', JSON.stringify(appointments));
+        
         showNotification('Rendez-vous supprimé avec succès', 'success');
         loadAppointments();
         updateDashboardStats();
@@ -232,28 +261,26 @@ async function saveAppointment() {
     const form = document.getElementById('appointmentForm');
     const isEditing = form.dataset.editingId;
     
-    // Récupérer les infos du patient
+    // Récupération des données patient
     const patientSelect = document.getElementById('patientId');
     const selectedOption = patientSelect.options[patientSelect.selectedIndex];
-    const selectedPatient = JSON.parse(localStorage.getItem('patients')).find(
-        p => p.id === patientSelect.value
-    );
+    const patientId = patientSelect.value;
     
-    if (!selectedPatient) {
-        showNotification('Patient introuvable', 'error');
+    if (!patientId) {
+        showNotification('Veuillez sélectionner un patient', 'error');
         return;
     }
 
     const appointmentData = {
         id: isEditing || generateId(),
-        patientId: form.patientId.value,
+        patientId: patientId,
         date: form.appointmentDate.value,
         type: form.appointmentType.value,
         notes: form.notes.value,
         status: 'planned',
-        patientNom: selectedPatient.nom,
-        patientPrenom: selectedPatient.prenom,
-        patientEmail: selectedOption.dataset.email || selectedPatient.email
+        patientNom: selectedOption.dataset.nom,
+        patientPrenom: selectedOption.dataset.prenom,
+        patientEmail: selectedOption.dataset.email
     };
     
     try {
@@ -270,21 +297,19 @@ async function saveAppointment() {
             throw new Error('Conflit de rendez-vous (patient ou créneau déjà réservé)');
         }
 
-        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-        
-        if (isEditing) {
-            appointments = appointments.map(a => 
+        // Dans un vrai système, on ferait une requête AJAX pour sauvegarder
+        // Pour l'exemple, nous mettons juste à jour le localStorage
+        let appointments = isEditing 
+            ? window.appointmentCache.appointments.map(a => 
                 a.id === isEditing ? { ...a, ...appointmentData } : a
-            );
-        } else {
-            appointments.push(appointmentData);
-            await sendAppointmentEmail(appointmentData);
-        }
+              )
+            : [...window.appointmentCache.appointments, appointmentData];
         
+        window.appointmentCache.appointments = appointments;
         localStorage.setItem('appointments', JSON.stringify(appointments));
         
         showNotification(
-            isEditing ? 'Rendez-vous mis à jour' : 'Rendez-vous enregistré et email envoyé', 
+            isEditing ? 'Rendez-vous mis à jour' : 'Rendez-vous enregistré',
             'success'
         );
         
@@ -294,12 +319,16 @@ async function saveAppointment() {
         loadAppointments();
         updateDashboardStats();
         
+        if (!isEditing) {
+            await sendAppointmentEmail(appointmentData);
+        }
     } catch (error) {
         console.error("Erreur:", error);
         showNotification(`Échec: ${error.message}`, 'error');
     }
 }
 
+/* UTILITAIRES */
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
@@ -312,10 +341,9 @@ function isValidAppointmentDate(date) {
 }
 
 async function hasAppointmentConflict(patientId, dateTime, excludeId = null) {
-    const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
     const appointmentDate = new Date(dateTime);
     
-    return appointments.some(app => {
+    return window.appointmentCache.appointments.some(app => {
         if (excludeId && app.id === excludeId) return false;
         
         const appDate = new Date(app.date);
@@ -329,59 +357,131 @@ async function hasAppointmentConflict(patientId, dateTime, excludeId = null) {
     });
 }
 
-async function sendAppointmentEmail(appointment) {
-    try {
-        const formattedDate = formatDate(appointment.date);
-        const emailParams = {
-            to_email: appointment.patientEmail,
-            to_name: `${appointment.patientPrenom} ${appointment.patientNom}`,
-            from_name: "AI4CKD Medical Center",
-            appointment_date: formattedDate,
-            appointment_type: appointment.type,
-            notes: appointment.notes || 'Aucune note particulière',
-            reply_to: "no-reply@ai4ckd.com"
-        };
+async function saveAppointment() {
+    const form = document.getElementById('appointmentForm');
+    const isEditing = form.dataset.editingId;
+    
+    // Récupération des données patient
+    const patientSelect = document.getElementById('patientId');
+    const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+    const patientId = patientSelect.value;
+    
+    if (!patientId) {
+        showNotification('Veuillez sélectionner un patient', 'error');
+        return;
+    }
 
-        await emailjs.send(
-            'service_wg4t62i', 
-            'template_rchta96',
-            emailParams
+    const appointmentData = {
+        id: isEditing || generateId(),
+        patientId: patientId,
+        date: form.appointmentDate.value,
+        type: form.appointmentType.value,
+        notes: form.notes.value,
+        status: 'planned',
+        patientNom: selectedOption.dataset.nom,
+        patientPrenom: selectedOption.dataset.prenom,
+        patientEmail: selectedOption.dataset.email
+    };
+    
+    try {
+        // Validation
+        if (!isValidAppointmentDate(appointmentData.date)) {
+            throw new Error('La date doit être au moins 1 heure dans le futur');
+        }
+
+        if (await hasAppointmentConflict(
+            appointmentData.patientId, 
+            appointmentData.date, 
+            isEditing || null
+        )) {
+            throw new Error('Conflit de rendez-vous (patient ou créneau déjà réservé)');
+        }
+
+        // Dans un vrai système, on ferait une requête AJAX pour sauvegarder
+        // Pour l'exemple, nous mettons à jour le localStorage et le cache
+        let appointments = [];
+        
+        if (isEditing) {
+            appointments = window.appointmentCache.appointments.map(a => 
+                a.id === isEditing ? { ...a, ...appointmentData } : a
+            );
+        } else {
+            // S'assurer que les appointments sont chargés correctement
+            appointments = window.appointmentCache.appointments || [];
+            appointments.push(appointmentData);
+        }
+        
+        // Mise à jour du cache et du localStorage
+        window.appointmentCache.appointments = appointments;
+        localStorage.setItem('appointments', JSON.stringify(appointments));
+        
+        // Ajouter explicitement l'événement au calendrier pour un affichage immédiat
+        if (window.calendarInstance) {
+            window.calendarInstance.addEvent({
+                id: appointmentData.id,
+                title: `${appointmentData.patientNom} - ${appointmentData.type}`,
+                start: appointmentData.date,
+                extendedProps: {
+                    notes: appointmentData.notes,
+                    patientId: appointmentData.patientId
+                },
+                color: '#007bff'
+            });
+        }
+        
+        showNotification(
+            isEditing ? 'Rendez-vous mis à jour' : 'Rendez-vous enregistré',
+            'success'
         );
+        
+        // Réinitialisation du formulaire
+        form.reset();
+        delete form.dataset.editingId;
+        form.querySelector('button[type="submit"]').textContent = 'Enregistrer';
+        
+        // Forcer le rafraîchissement complet
+        setTimeout(() => {
+            loadAppointments();
+            updateDashboardStats();
+        }, 100);
+        
+        if (!isEditing) {
+            await sendAppointmentEmail(appointmentData);
+        }
     } catch (error) {
-        console.error("Erreur d'envoi d'email:", error);
-        throw new Error("L'enregistrement a réussi mais l'email n'a pas pu être envoyé");
+        console.error("Erreur:", error);
+        showNotification(`Échec: ${error.message}`, 'error');
     }
 }
 
 function updateDashboardStats() {
+    // Notifie le parent si dans un iframe
     if (window.parent && window.parent.updateStats) {
         window.parent.updateStats();
-    } else if (window.opener && window.opener.updateStats) {
+    }
+    // Alternative pour les popups
+    else if (window.opener && window.opener.updateStats) {
         window.opener.updateStats();
-    } else {
-        console.log("Mise à jour des stats du dashboard déclenchée");
-        // Alternative pour les iframes/popups fermées
+    }
+    // Solution de repli
+    else {
         localStorage.setItem('forceStatsRefresh', Date.now().toString());
     }
 }
 
-const dateFormatCache = {};
 function formatDate(dateString) {
-    if (dateFormatCache[dateString]) {
-        return dateFormatCache[dateString];
+    if (!window.appointmentCache.dateFormat[dateString]) {
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        window.appointmentCache.dateFormat[dateString] = new Date(dateString).toLocaleDateString('fr-FR', options);
     }
-    
-    const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    };
-    
-    dateFormatCache[dateString] = new Date(dateString).toLocaleDateString('fr-FR', options);
-    return dateFormatCache[dateString];
+    return window.appointmentCache.dateFormat[dateString];
 }
 
 function formatDateForInput(dateString) {

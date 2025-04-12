@@ -1,160 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const patientForm = document.getElementById('patientForm');
-    const patientList = document.getElementById('patientList');
-    
-    if (!patientForm || !patientList) {
-        console.error("patientForm ou patientList introuvable");
-        return;
-    }
-    
-    // Charger les patients existants
-    loadPatients();
-    
-    // Gestion de la soumission du formulaire
-    patientForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const newPatient = {
-            id: Date.now().toString(),
-            nom: document.getElementById('lastName').value,
-            prenom: document.getElementById('firstName').value,
-            age: document.getElementById('age').value,
-            stadeMRC: document.getElementById('ckdStage').value,
-            dernierExamen: document.getElementById('lastExam').value
-        };
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const editIndex = urlParams.get('edit');
-        
-        if (editIndex !== null) {
-            updatePatient(editIndex, newPatient);
-        } else {
-            savePatient(newPatient);
-        }
-        
-        patientForm.reset();
-        loadPatients();
-    });
-
-    function savePatient(patient) {
-        let patients = JSON.parse(localStorage.getItem('patients')) || [];
-        patient.email = document.getElementById('email').value; // Ajoutez cette ligne
-        patient.id = patient.id || Date.now().toString();
-        patients.push(patient);
-        localStorage.setItem('patients', JSON.stringify(patients));
-    }
-    
-    function loadPatients() {
-        const patients = JSON.parse(localStorage.getItem('patients')) || [];
-        patientList.innerHTML = '';
-        
-        patients.forEach((patient, index) => {
-            const row = document.createElement('tr');
-            
-            if (patient.stadeMRC >= 4) {
-                row.classList.add('critical');
-            }
-            
-            row.innerHTML = `
-                <td>${patient.nom || 'N/A'}</td>
-                <td>${patient.prenom || 'N/A'}</td>
-                <td>${patient.age || 'N/A'}</td>
-                <td>Stade ${patient.stadeMRC || 'N/A'}</td>
-                <td>${patient.dernierExamen || 'N/A'}</td>
-                <td class="action-btns">
-                    <a href="patient.html?edit=${index}" class="edit-btn" title="Modifier">✏️</a>
-                    <button class="delete-btn" data-id="${index}" title="Supprimer">🗑️</button>
-                    <button class="pdf-btn" data-id="${index}" title="Générer PDF">📄 PDF</button>
-                </td>
-            `;
-            
-            patientList.appendChild(row);
-        });
-        
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                deletePatient(parseInt(this.getAttribute('data-id')));
-            });
-        });
-        
-        document.querySelectorAll('.pdf-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const patientId = this.getAttribute('data-id');
-                generatePdfForPatient(patientId);
-            });
-        });
-    }
-    
-    function generatePdfForPatient(patientId) {
-        const patients = JSON.parse(localStorage.getItem('patients')) || [];
-        const patient = patients[patientId];
-        
-        if (!patient) {
-            showNotification('Patient non trouvé', 'error');
-            return;
-        }
-        
-        if (typeof generatePatientReport === 'function') {
-            generatePatientReport(patient);
-        } else {
-            showNotification('La fonction PDF n\'est pas disponible', 'error');            console.error('generatePatientReport non définie');
-        }
-    }
-    
-    function deletePatient(index) {
-        if (confirm('Voulez-vous vraiment supprimer ce patient ?')) {
-            let patients = JSON.parse(localStorage.getItem('patients')) || [];
-            patients.splice(index, 1);
-            localStorage.setItem('patients', JSON.stringify(patients));
-            loadPatients();
-            showNotification('Patient supprimé', 'success');
-        }
-    }
-    
-    function updatePatient(index, updatedData) {
-        let patients = JSON.parse(localStorage.getItem('patients')) || [];
-        
-        if (!validatePatientData(updatedData)) return;
-        
-        patients[index] = { ...patients[index], ...updatedData };
-        localStorage.setItem('patients', JSON.stringify(patients));
-        showNotification('Patient mis à jour', 'success');
-        loadPatients();
-    }
-    
-    function validatePatientData(patient) {
-        if (!patient.nom || !patient.age || !patient.stadeMRC || !patient.dernierExamen) {
-            showNotification('Tous les champs obligatoires doivent être remplis', 'error');
-            return false;
-        }
-        
-        if (isNaN(new Date(patient.dernierExamen).getTime())) {
-            showNotification("Date d'examen invalide", 'error');
-            return false;
-        }
-        
-        return true;
-    }
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const editIndex = urlParams.get('edit');
-    
-    if (editIndex !== null) {
-        const patients = JSON.parse(localStorage.getItem('patients')) || [];
-        const patient = patients[editIndex];
-        
-        if (patient) {
-            document.getElementById('lastName').value = patient.nom;
-            document.getElementById('firstName').value = patient.prenom;
-            document.getElementById('age').value = patient.age;
-            document.getElementById('ckdStage').value = patient.stadeMRC;
-            document.getElementById('lastExam').value = patient.dernierExamen;
-            
-            document.querySelector('.submit-btn').textContent = 'Mettre à jour';
-            document.querySelector('h3').textContent = 'Modifier le patient';
-        }
-    }
-    
+    // Fonction pour afficher les notifications
     function showNotification(message, type = 'info') {
         const notif = document.createElement('div');
         notif.className = `notification ${type}`;
@@ -162,4 +7,130 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 5000);
     }
+
+    // Gestion de la soumission du formulaire
+    const patientForm = document.getElementById('patientForm');
+    if (patientForm) {
+        patientForm.addEventListener('submit', function(e) {
+            // Validation côté client peut être ajoutée ici
+            showNotification('Patient enregistré avec succès', 'success');
+        });
+    }
+
+    // Module d'analyse médicale
+    window.MedicalAnalysis = {
+        analyzeLabResults: function(patientId, labData) {
+            return fetch(`/api/analyze-results/${patientId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(labData)
+            })
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Error:', error);
+                return { error: "Erreur lors de l'analyse" };
+            });
+        },
+
+        getNextSteps: function(stage, labData) {
+            const steps = [];
+            
+            switch(stage) {
+                case 1:
+                case 2:
+                    steps.push("Suivi annuel");
+                    break;
+                case 3:
+                    steps.push("Suivi trimestriel");
+                    steps.push("Contrôle tensionnel strict");
+                    break;
+                case 4:
+                    steps.push("Suivi mensuel");
+                    steps.push("Éducation thérapeutique");
+                    steps.push("Préparation RRT");
+                    break;
+                case 5:
+                    steps.push("Dialyse ou transplantation");
+                    steps.push("Suivi spécialisé rapproché");
+                    break;
+            }
+            
+            if (labData && parseFloat(labData.albuminuria) > 300) {
+                steps.push("Traitement néphroprotecteur");
+            }
+            
+            return steps;
+        }
+    };
+
+    // Fonction utilitaire pour récupérer le cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 });
+
+// Gestion de la page patient-details.html
+if (window.location.pathname.includes('patient-details')) {
+    document.addEventListener('DOMContentLoaded', function() {
+        const patientId = new URLSearchParams(window.location.search).get('id');
+        
+        if (patientId) {
+            fetch(`/api/patient-details/${patientId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Remplir les détails du patient
+                    document.getElementById('patient-name').textContent = `${data.nom} ${data.prenom}`;
+                    // ... autres champs
+                    
+                    // Si des résultats de labo existent, analyser
+                    if (data.lab_results) {
+                        analyzeAndDisplayResults(data.id, data.lab_results);
+                    }
+                });
+        }
+
+        function analyzeAndDisplayResults(patientId, labData) {
+            MedicalAnalysis.analyzeLabResults(patientId, labData)
+                .then(results => {
+                    if (!results.error) {
+                        // Afficher les résultats de l'analyse
+                        document.getElementById('ckd-stage').textContent = results.stage;
+                        document.getElementById('recommendations').innerHTML = 
+                            results.recommendations.map(r => `<li>${r}</li>`).join('');
+                        
+                        // Mettre à jour le patient avec le nouveau stade
+                        return fetch(`/api/update-patient-stage/${patientId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ stage: results.stage })
+                        });
+                    }
+                })
+                .then(response => {
+                    if (response && !response.ok) {
+                        throw new Error('Échec de la mise à jour');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    });
+}

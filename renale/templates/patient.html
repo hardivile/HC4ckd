@@ -8,19 +8,16 @@
     <title>Gestion des Patients - AI4CKD</title>
     <link rel="stylesheet" href="{% static 'patient.css' %}">
     <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
-    <script src="https://unpkg.com/pdf-lib@^1.16.0/dist/pdf-lib.min.js"></script>
-    <script src="../auto-tasks.js" defer></script>
-    <script src="patient.js" defer></script>
 </head>
 <body>
     <div class="sidebar" role="navigation">
         <h1>AI4CKD</h1>
         <ul>
             <li><a href="{% url 'dm' %}" aria-current="page">📊 Tableau de bord</a></li>
-            <li><a href="{% url 'pat' %}">👥 Patients</a></li>
+            <li><a href="{% url 'pat' %}" class="active">👥 Patients</a></li>
             <li><a href="{% url 'rend' %}">🗓 Rendez-vous</a></li>
             <li><a href="{% url 'par' %}">⚙️ Paramètres</a></li>
         </ul>
@@ -42,7 +39,6 @@
                     <button class="btn btn-outline-success" type="submit">Search</button>
                 </form>
             </div>
-
             <div class="profile">👨⚕️ Dr. Dupont</div>
         </header>
 
@@ -64,31 +60,19 @@
                         
                         <div class="form-group">
                             <label for="firstName">Prénom:</label>
-                            <input type="text" id="firstName" name="firstName">
+                            <input type="text" id="firstName" name="firstName" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="age">Âge:</label>
-                            <input type="number" id="age" name="age" min="0" max="120">
+                            <input type="number" id="age" name="age" min="0" max="120" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="email">Email:</label>
-                            <input type="email" id="email" name="email">
+                            <input type="email" id="email" name="email" required>
                         </div>
 
-                        <div class="form-group">
-                            <label for="ckdStage">Stade MRC:</label>
-                            <select id="ckdStage" name="ckdStage" required>
-                                <option value="">Sélectionner...</option>
-                                <option value="1">Stade 1</option>
-                                <option value="2">Stade 2</option>
-                                <option value="3">Stade 3</option>
-                                <option value="4">Stade 4</option>
-                                <option value="5">Stade 5</option>
-                            </select>
-                        </div>
-                        
                         <div class="form-group">
                             <label for="lastExam">Dernier examen:</label>
                             <input type="date" id="lastExam" name="lastExam" required>
@@ -118,23 +102,30 @@
                         </thead>
                         <tbody id="patientList">
                             {% for a in pt %}
-                                <tr>
+                                <tr {% if a.stade and a.stade >= 4 %}class="critical"{% endif %}>
                                     <td>{{ a.nom }}</td>
                                     <td>{{ a.prenoms }}</td>
                                     <td>{{ a.age }}</td>
-                                    <td>{{ a.stade }}</td>
+                                    <td>{% if a.stade %}{{ a.stade }}{% else %}En attente d'analyse{% endif %}</td>
                                     <td>{{ a.date|date:"d/m/Y" }}</td>  
-
                                     <td>
-                                        <a href="update/{{ a.id }}">
-                                            <button class="btn btn-warning btn-sm">Modifier</button>
+                                        <a href="{% url 'patient_details' patient_id=a.id %}" class="btn btn-info btn-sm" title="Voir">
+                                            <i class="fas fa-eye"></i>
                                         </a>
-
+                                        <a href="update/{{ a.id }}" class="btn btn-warning btn-sm" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
                                         <button class="btn btn-danger btn-sm"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#confirmDeleteModal"
-                                                data-id="{{ a.id }}">
-                                            Supprimer
+                                                data-id="{{ a.id }}"
+                                                title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm pdf-btn" 
+                                                data-id="{{ a.id }}"
+                                                title="Générer PDF">
+                                            <i class="fas fa-file-pdf"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -158,11 +149,10 @@
                     Êtes-vous sûr de vouloir supprimer ce patient ?
                 </div>
                 <div class="modal-footer">
-                    <!-- Formulaire pour la suppression -->
                     <form id="deleteForm" method="POST" action="">
                         {% csrf_token %}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
-                        <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger">Confirmer</button>
                     </form>
                 </div>
             </div>
@@ -170,15 +160,39 @@
     </div>
 
     <script>
-        // JavaScript pour afficher la modal après la suppression
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gestion de la modal de suppression
             const confirmDeleteModal = document.getElementById('confirmDeleteModal');
-            confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
-                var button = event.relatedTarget;  // Bouton qui a déclenché la modal
-                var id = button.getAttribute('data-id');  // ID du patient
+            confirmDeleteModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var id = button.getAttribute('data-id');
                 var form = confirmDeleteModal.querySelector('#deleteForm');
-                form.action = "{% url 'SupP' 0 %}".replace('0', id);  // Remplacer l'ID dans l'action
+                form.action = "{% url 'SupP' 0 %}".replace('0', id);
             });
+
+            // Gestion des boutons PDF
+            document.querySelectorAll('.pdf-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const patientId = this.getAttribute('data-id');
+                    generatePdfForPatient(patientId);
+                });
+            });
+
+            function generatePdfForPatient(patientId) {
+                // Implémentez la génération PDF ici ou appelez un endpoint backend
+                console.log(`Génération PDF pour patient ID: ${patientId}`);
+                // window.location.href = `/generate-pdf/${patientId}/`;
+            }
+
+            // Gestion de l'édition
+            const urlParams = new URLSearchParams(window.location.search);
+            const editIndex = urlParams.get('edit');
+            
+            if (editIndex !== null) {
+                document.querySelector('.submit-btn').textContent = 'Mettre à jour';
+                document.querySelector('h3').textContent = 'Modifier le patient';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         });
     </script>
 </body>

@@ -4,8 +4,11 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from datetime import datetime
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Patient 
+import json
 
-# Create your views here.
  
 def home(request):
 
@@ -266,28 +269,58 @@ def con(request):
 
 def addp(request):
     if request.method == 'POST':
-        a = request.POST.get('lastName')
-        b = request.POST.get('firstName')
-        c = request.POST.get('age')
-        d = request.POST.get('email')
-        e = request.POST.get('ckdStage')
-        f = request.POST.get('lastExam')
+        try:
+            # Gardez seulement les champs obligatoires
+            patient = Patient.objects.create(
+                nom=request.POST.get('lastName'),
+                prenoms=request.POST.get('firstName'),
+                age=request.POST.get('age'),
+                email=request.POST.get('email'),
+                date=request.POST.get('lastExam'),
+                # stade reste null à la création
+            )
+            return JsonResponse({'success': True, 'id': patient.id})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
-        pat = Patient(
 
 
 
-                nom = a,
-                prenoms = b,
-                age = c,
-                email = d,
-                stade=e ,
+@csrf_exempt
+def analyze_patient(request, patient_id):
+    if request.method == 'POST':
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            lab_data = json.loads(request.body)
             
-                date=f,
-        )
-        pat.save()
-        return redirect('pat')
-    return redirect('pat')
+            # 1. Sauvegardez les données brutes
+            patient.donnees_labo = lab_data
+            
+            # 2. Logique d'analyse (exemple simplifié)
+            stade = determine_stade(lab_data)  # À implémenter
+            
+            # 3. Mise à jour du patient
+            patient.stade = stade
+            patient.save()
+            
+            return JsonResponse({
+                'success': True,
+                'stade': stade,
+                'recommendations': get_recommendations(stade)
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+def determine_stade(lab_data):
+    """Implémentez votre logique métier ici"""
+    gfr = lab_data.get('gfr')
+    if gfr >= 90: return 1
+    elif gfr >= 60: return 2
+    elif gfr >= 30: return 3
+    elif gfr >= 15: return 4
+    else: return 5
+
 
   
 def addrnd(request):
@@ -314,6 +347,66 @@ def addrnd(request):
 
 
 
+def patient_details(request, patient_id):
+    patient = get_object_or_404(Patient, id=patient_id)  # Fonction maintenant reconnue
+    return render(request, 'patient-details.html', {'patient': patient})
+
+
+@csrf_exempt
+def analyze_patient(request, patient_id):
+    if request.method == 'POST':
+        try:
+            patient = get_object_or_404(Patient, id=patient_id)
+            data = json.loads(request.body)
+            
+            # Validation des données
+            gfr = float(data.get('gfr'))
+            albuminuria = float(data.get('albuminuria', 0))
+            
+            # Calcul du stade MRC
+            if gfr >= 90: stage = 1
+            elif gfr >= 60: stage = 2
+            elif gfr >= 30: stage = 3
+            elif gfr >= 15: stage = 4
+            else: stage = 5
+            
+            # Génération des recommandations
+            recommendations = []
+            if stage in [1, 2]:
+                recommendations.append("Surveillance annuelle")
+            elif stage == 3:
+                recommendations.append("Surveillance trimestrielle")
+                if albuminuria > 30:
+                    recommendations.append("Traitement néphroprotecteur")
+            elif stage == 4:
+                recommendations.append("Préparation à la suppléance")
+                recommendations.append("Éducation thérapeutique")
+            elif stage == 5:
+                recommendations.append("Dialyse ou transplantation")
+            
+            # Sauvegarde
+            patient.stade = stage
+            patient.donnees_labo = {
+                'gfr': gfr,
+                'albuminuria': albuminuria,
+                'date_analyse': datetime.now().isoformat()
+            }
+            patient.save()
+            
+            return JsonResponse({
+                'success': True,
+                'stage': stage,
+                'recommendations': recommendations,
+                'patient_id': patient.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
 def SupP(request,id):
     pt= Patient.objects.get(id=id)
     pt.delete()
@@ -325,7 +418,23 @@ def update(request,id):
     pt = Patient.objects.get(id=id)
     return render(request,'updatepatient.html',{'pt':pt}) 
 
-
+@csrf_exempt  
+def analyze_data(request):
+    if request.method == 'POST':
+        try:
+            # 1. Récupérer les données
+            data = request.POST
+            print("Données reçues:", data)  # Vérification dans la console serveur
+            
+            # 2. Traitement (exemple simplifié)
+            results = f"Analyse terminée pour {data.get('patient_id')}"
+            
+            # 3. Retourner la réponse
+            return JsonResponse({'status': 'success', 'results': results})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'})
 
 
 def uprec(request, id):

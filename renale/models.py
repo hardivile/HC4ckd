@@ -29,7 +29,8 @@ class Patient(models.Model):
     prenoms = models.CharField(max_length=255)
     age = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    stade = models.IntegerField()  # Change EmailField to CharField for "stade"
+    stade = models.PositiveIntegerField(null=True, blank=True)  # Null avant analyse
+    donnees_labo = models.JSONField(null=True, blank=True)  # Pour stocker les résultats bruts
     date = models.DateField(null=True, blank=True)
 
     def __str__(self):
