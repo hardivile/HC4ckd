@@ -91,7 +91,7 @@ def par(request):
     return render(request, 'parametres.html')
 
 
-def dm(request):
+def da(request):
     pt = Patient.objects.all()
 
     if request.method == "GET":
